@@ -22,10 +22,7 @@ public:
         parse(html);
     }
 
-    ~HtmlParser()
-    {
-        
-    }
+    ~HtmlParser(){};
 
     const std::vector<Product>& get_products() const { return products; }
 
