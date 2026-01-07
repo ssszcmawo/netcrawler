@@ -1,7 +1,7 @@
 #include <iostream>
 #include "HttpsClient.hpp"
 #include "HtmlParser.hpp"
-#include <fstream>
+
 
 int main()
 {
@@ -28,6 +28,8 @@ int main()
     } 
 
     HtmlParser parser(document);
+
+    parser.filter_csv_by_price("products.csv",0,200);
 
 
     curl_global_cleanup();
