@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Iinclude
+CXXFLAGS = -g -std=c++17 -Wall -Iinclude
 LDFLAGS = -lcurl -lxml2
 
 SRC = main.cpp src/HttpsClient.cpp
