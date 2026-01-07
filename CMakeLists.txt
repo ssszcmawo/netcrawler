@@ -10,6 +10,7 @@ include_directories(include)
 add_executable(WebCrawler
     main.cpp
     src/HttpsClient.cpp
+    src/HtmlParser.cpp
 )
 
 find_package(CURL REQUIRED)
