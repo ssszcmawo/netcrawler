@@ -39,7 +39,8 @@ void HtmlParser::parse(const std::string& html)
         xmlNodePtr product_node = html_elements->nodesetval->nodeTab[i];
         if(!product_node) continue;
 
-        auto get_text_from_xpath = [&](const char* xpath_expr) -> std::string {
+        auto get_text_from_xpath = [&](const char* xpath_expr) -> std::string
+        {
         context->node = product_node;
 
         xmlXPathObjectPtr obj =
@@ -60,14 +61,12 @@ void HtmlParser::parse(const std::string& html)
 
         if (obj) xmlXPathFreeObject(obj);
         return result;
-};
+        };
 
         std::string url   = get_text_from_xpath(".//a/@href");
         std::string image = get_text_from_xpath(".//img/@src");
         std::string name  = get_text_from_xpath(".//a/h2");
-        std::string string_price = get_text_from_xpath(".//a/span");
-
-        double price = clean_price(string_price);
+        std::string price = get_text_from_xpath(".//a/span"); 
 
         Product product = {url, name, image, price};
         products.push_back(product);
@@ -80,107 +79,117 @@ void HtmlParser::parse(const std::string& html)
     export_to_csv("products.csv");
 }
 
+static std::string escape_csv(const std::string& field)
+{
+    std::string result = "\"";
+    for (char c : field)
+    {
+        if (c == '"') result += "\"\"";
+        else result += c;
+    }
+    result += "\"";
+    return result;
+}
 
 void HtmlParser::export_to_csv(const std::string& filename)
 {
-    std::string folder_name = "csv_files";
-
+    fs::path folder_name = fs::current_path().parent_path() / "csv_files";
     if(!fs::exists(folder_name))
     {
         if(fs::create_directory(folder_name))
         {
             std::cout << "Folder created: " << folder_name << "\n";
-        }else{
+        } else {
             std::cerr << "Failed to create folder: " << folder_name << "\n";
             return;
         }
     }
 
-    std::string csv_path = folder_name + "/" + filename;
-
+    fs::path csv_path = folder_name / filename;
     std::ofstream csv_file(csv_path);
 
     if(!csv_file)
     {
-        std::cerr << "Failed to open file: " << filename << "\n";
+        std::cerr << "Failed to open file: " << csv_path << "\n";
         return;
     }
 
-    csv_file << "url,name,image,price" << "\n";
+    csv_file << "url,name,image,price\n";
 
-    for(int i = 0; i < products.size(); ++i)
+    for (auto& p : products)
     {
-        Product p = products.at(i);
-
-        std::string csv_record = p.url + "," + p.name + "," + p.image + "," + std::to_string(p.price);
-
-        csv_file << csv_record << "\n";
+        csv_file << escape_csv(p.url) << ","
+                 << escape_csv(p.name) << ","
+                 << escape_csv(p.image) << ","
+                 << escape_csv(p.price) << "\n";
     }
 
     csv_file.close();
+    std::cout << "CSV saved to: " << csv_path << "\n";
 }
 
 std::vector<Product> HtmlParser::read_csv(const std::string& filename)
 {
     std::vector<Product> read_products;
 
-    std::ifstream file(filename);
+    const fs::path csv_files_dir = fs::current_path().parent_path() / "csv_files";
+    const fs::path csv_path = csv_files_dir / filename;
 
-    if(! file.is_open()) return read_products;
+   if(!fs::exists(csv_path)) 
+   {
+        std::cerr << "CSV file not found: " << csv_path << '\n';
+        return read_products;
+   }
 
-    std::string line;
-    std::getline(file,line);
+   std::ifstream file(csv_path);
+   if(!file.is_open()) return read_products;
 
-    while(std::getline(file,line))
+   std::string line;
+   std::getline(file,line);
+
+   while(std::getline(file, line))
     {
         std::istringstream ss(line);
-        std::string name,priceStr,url,image;
+        std::string url,name,image,price;
 
-        std::getline(ss,name,',');
-        std::getline(ss,priceStr,',');
-        std::getline(ss,url,',');
-        std::getline(ss,image,',');
+        auto read_field = [&](std::string& dest)
+        {
+            if(line.empty()) return;
+            if(line.front() == '"')
+            {
+                line.erase(0,1);
+                auto pos = line.find("\"");
+                if(pos != std::string::npos)
+                {
+                    dest = line.substr(0,pos);
+                    line.erase(0,pos+2);
+                }
+            }
+            else
+            {
+                auto pos = line.find(',');
+                if(pos != std::string::npos)
+                {
+                    dest = line.substr(0,pos);
+                    line.erase(0,pos+1);
+                } else {
+                    dest = line;
+                    line.clear();
+                }
+            }
+        };
+        read_field(url);
+        read_field(name);
+        read_field(image);
+        read_field(price);
 
-        Product p;
-
-        p.name = name;
-        p.price = std::stod(priceStr);
-        p.url = url;
-        p.image = image;
-
-        read_products.push_back(p);
+        read_products.emplace_back(Product{url,name,image,price});
     }
 
     return read_products;
 }
 
-void HtmlParser::filter_csv_by_price(const std::string& filename,double min,double max)
-{   
-    if(!fs::exists(filename))
-    {
-        std::cerr << "Could not open file: " << filename << '\n';
-        return;
-    }
-
-    auto products = read_csv(filename);
-
-    products.erase(
-        std::remove_if(products.begin(), products.end(),
-                       [&](const Product& p){ return p.price < min || p.price > max; }),
-        products.end()
-    );
-
-    std::ofstream out (filename);
-
-    out << "url,name,image,price\n";
-
-    for(auto& p : products)
-    {
-        out << p.url << "," << p.name << "," << p.image << "," << p.price << '\n';
-    }
-}
-
-double HtmlParser::clean_price(const std::string& str)
+static double clean_price(const std::string& str)
 {
     std::string clean;
 
@@ -190,8 +199,78 @@ double HtmlParser::clean_price(const std::string& str)
             clean += c;
     }
 
-    double result = std::stod(clean);
+    if(clean.empty()) return 0.0;
 
-    return result;
+    try
+    {
+        return std::stod(clean); 
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "Failed to convert: " << str << ": " << e.what() << '\n';
+        return 0.0;
+    }
+}
+
+void HtmlParser::filter_csv_by_price(const std::string& filename,double min,double max)
+{   
+    if(filename.empty())
+        return;
+
+    auto products = read_csv(filename);
+
+    products.erase(
+        std::remove_if(products.begin(), products.end(),
+                       [&](const Product& p){ 
+                            double price = clean_price(p.price);
+                            return price < min || price > max;
+                        }),
+        products.end()
+    );
+
+    std::sort(products.begin(),products.end(),
+            [](const Product& a, const Product& b){
+                return clean_price(a.price) < clean_price(b.price);
+            });
+
+    fs::path csv_files_dir = fs::current_path().parent_path() / "csv_files";
+    fs::path csv_path = csv_files_dir / filename;
+    std::ofstream out(csv_path);
+
+    if(!out) { std::cerr << "Failed to open CSV for writing: " << csv_path << "\n"; return; }
+
+    out << "url,name,image,price\n";
+    for(auto& p : products)
+    {
+        out << escape_csv(p.url) << ","
+            << escape_csv(p.name) << ","
+            << escape_csv(p.image) << ","
+            << escape_csv(p.price) << "\n";
+    }
+
+    out.close();
+
+    std::cout << "Filtered CSV by price\n";
+}
+
+
+std::optional<Product> HtmlParser::find_product_by_name(const std::string& filename,const std::string& name)
+{
+    if(filename.empty())
+    {
+        std::cerr << "Filename is empty";
+        return std::nullopt;
+    }
+
+    auto products = read_csv(filename);
+
+    auto it = std::find_if(products.begin(),products.end(),[&](const Product& p){
+        return p.name == name;
+    });
+
+    if(it != products.end())
+        return *it;
+
+    return std::nullopt;
 }
 
