@@ -5,3 +5,5 @@ obj/
 build/
 
 .vscode/
+
+csv_files/
