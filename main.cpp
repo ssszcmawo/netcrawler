@@ -29,7 +29,15 @@ int main()
 
     HtmlParser parser(document);
 
-    parser.filter_csv_by_price("products.csv",0,200);
+    parser.filter_csv_by_price("products.csv",40,50);
+
+    auto prod = parser.find_product_by_name("products.csv", "Ana Running Short");
+    if(prod)
+     std::cout << prod->name << " "<< prod->price << "\n";
+    else{
+        std::cout << "error\n";
+    }
+
 
 
     curl_global_cleanup();
