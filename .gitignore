@@ -7,3 +7,5 @@ build/
 .vscode/
 
 csv_files/
+
+.clang-format
