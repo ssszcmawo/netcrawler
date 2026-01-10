@@ -4,9 +4,18 @@
 #include <fstream>
 #include <iostream>
 
+extern "C"
+{
+#include "slogger.h"
+}
+
 int main()
 {
     curl_global_init(CURL_GLOBAL_ALL);
+
+    init_consoleLog(stderr);
+
+    set_log_level(INFO);
 
     HttpsClient client;
 
