@@ -4,6 +4,11 @@
 #include <sstream>
 #include <string>
 
+extern "C"
+{
+#include "slogger.h"
+}
+
 namespace fs = std::filesystem;
 
 namespace Utils
@@ -30,10 +35,12 @@ void export_to_csv(const std::string &filename)
     if (!fs::exists(folder_name))
     {
         if (fs::create_directory(folder_name))
-            std::cout << "Folder created: " << folder_name << "\n";
+        {
+            LOG_INFO("[export_to_csv] Folder created: %s", folder_name.string().c_str());
+        }
         else
         {
-            std::cerr << "Failed to create folder: " << folder_name << "\n";
+            LOG_ERROR("[export_to_csv] Failed to create folder: %s", folder_name.string().c_str());
             return;
         }
     }
@@ -43,7 +50,7 @@ void export_to_csv(const std::string &filename)
 
     if (!csv_file)
     {
-        std::cerr << "Failed to open file: " << csv_path << "\n";
+        LOG_ERROR("[export_to_csv] Failed to open file: %s", csv_path.string().c_str());
         return;
     }
 
@@ -58,7 +65,7 @@ void export_to_csv(const std::string &filename)
     }
 
     csv_file.close();
-    std::cout << "CSV saved to: " << csv_path << "\n";
+    LOG_INFO("[export_to_csv] CSV saved to: %s", csv_path.string().c_str());
 }
 
 std::vector<Product> read_csv(const std::string &filename)
@@ -70,16 +77,20 @@ std::vector<Product> read_csv(const std::string &filename)
 
     if (!fs::exists(csv_path))
     {
-        std::cerr << "CSV file not found: " << csv_path << '\n';
+        LOG_ERROR("[read_csv] CSV file not found: %s", csv_path.string().c_str());
         return read_products;
     }
 
     std::ifstream file(csv_path);
     if (!file.is_open())
+    {
+        LOG_ERROR("[read_csv] Failed to open CSV file: %s", csv_path.string().c_str());
         return read_products;
+    }
 
     std::string line;
     std::getline(file, line);
+    LOG_INFO("[read_csv] Reading CSV: %s", csv_path.string().c_str());
 
     while (std::getline(file, line))
     {
@@ -114,14 +125,21 @@ std::vector<Product> read_csv(const std::string &filename)
                 }
             }
         };
+
         read_field(url);
         read_field(name);
         read_field(image);
         read_field(price);
 
         read_products.emplace_back(Product{url, name, image, price});
+        LOG_DEBUG("[read_csv] Read product: %s | %s | %s | %s",
+            url.c_str(),
+            name.c_str(),
+            image.c_str(),
+            price.c_str());
     }
 
+    LOG_INFO("[read_csv] Total products read: %zu", read_products.size());
     return read_products;
 }
 
@@ -135,7 +153,10 @@ std::optional<double> parse_price(std::string_view str)
     }
 
     if (clean.empty())
+    {
+        LOG_DEBUG("[parse_price] Empty numeric value from: %.*s", (int)str.size(), str.data());
         return std::nullopt;
+    }
 
     try
     {
@@ -143,7 +164,7 @@ std::optional<double> parse_price(std::string_view str)
     }
     catch (const std::exception &e)
     {
-        std::cerr << "Failed to convert: " << str << ": " << e.what() << "\n";
+        LOG_ERROR("[parse_price] Failed to convert: %.*s", (int)str.size(), str.data());
         return std::nullopt;
     }
 }
@@ -151,17 +172,23 @@ std::optional<double> parse_price(std::string_view str)
 void filter_csv_by_price(const std::string &filename, double min, double max)
 {
     if (filename.empty())
+    {
+        LOG_ERROR("[filter_csv_by_price] Filename is empty");
         return;
+    }
 
     auto products_list = read_csv(filename);
 
     products_list.erase(
         std::remove_if(products_list.begin(), products_list.end(), [&](const Product &p)
             {
-                auto price = parse_price(p.price);
-                if (!price)
-                    return true;
-                return *price < min || *price > max; }),
+                           auto price = parse_price(p.price);
+                           if (!price)
+                           {
+                               LOG_DEBUG("[filter_csv_by_price] Skipping product with invalid price: %s", p.price.c_str());
+                               return true;
+                           }
+                           return *price < min || *price > max; }),
         products_list.end());
 
     std::sort(products_list.begin(), products_list.end(), [](const Product &a, const Product &b)
@@ -173,7 +200,7 @@ void filter_csv_by_price(const std::string &filename, double min, double max)
 
     if (!out)
     {
-        std::cerr << "Failed to open CSV for writing: " << csv_path << "\n";
+        LOG_ERROR("[filter_csv_by_price] Failed to open CSV for writing: %s", csv_path.string().c_str());
         return;
     }
 
@@ -187,13 +214,16 @@ void filter_csv_by_price(const std::string &filename, double min, double max)
     }
 
     out.close();
-    std::cout << "Filtered CSV by price\n";
+    LOG_INFO("[filter_csv_by_price] Filtered CSV saved: %s", csv_path.string().c_str());
 }
 
 std::optional<Product> find_product_by_name(const std::string &filename, const std::string &name)
 {
     if (filename.empty())
+    {
+        LOG_ERROR("[find_product_by_name] Filename is empty");
         return std::nullopt;
+    }
 
     auto products_list = read_csv(filename);
 
@@ -201,8 +231,12 @@ std::optional<Product> find_product_by_name(const std::string &filename, const s
         { return p.name == name; });
 
     if (it != products_list.end())
+    {
+        LOG_INFO("[find_product_by_name] Product found: %s", it->name.c_str());
         return *it;
+    }
 
+    LOG_DEBUG("[find_product_by_name] Product not found: %s", name.c_str());
     return std::nullopt;
 }
 
@@ -215,21 +249,33 @@ const std::vector<Product> &get_products()
 
 void HtmlParser::parse(const std::string &html)
 {
+    LOG_INFO("[HtmlParser::parse] Parsing started, HTML size: %zu", html.size());
     Utils::products.clear();
 
     XmlDocWrapper doc(htmlReadMemory(html.c_str(), html.size(), nullptr, nullptr, HTML_PARSE_NOERROR));
     if (!doc)
+    {
+        LOG_ERROR("[HtmlParser::parse] Failed to parse HTML");
         return;
+    }
 
     XmlXPathContextWrapper context(xmlXPathNewContext(doc));
     if (!context)
+    {
+        LOG_ERROR("[HtmlParser::parse] Failed to create XPath context");
         return;
+    }
 
     XmlXPathObjectWrapper html_elements(xmlXPathEvalExpression(
         reinterpret_cast<const xmlChar *>("//li[contains(@class, 'product')]"), context));
 
     if (!html_elements || !html_elements->nodesetval)
+    {
+        LOG_ERROR("[HtmlParser::parse] No product elements found in HTML");
         return;
+    }
+
+    LOG_INFO("[HtmlParser::parse] Found %d product elements", html_elements->nodesetval->nodeNr);
 
     for (int i = 0; i < html_elements->nodesetval->nodeNr; ++i)
     {
@@ -286,8 +332,15 @@ void HtmlParser::parse(const std::string &html)
         std::string name = get_text_from_xpath(product_node, ".//a/h2");
         std::string price = get_text_from_xpath(product_node, ".//a/span");
 
+        LOG_DEBUG("[HtmlParser::parse] Product parsed: %s | %s | %s | %s",
+            url.c_str(),
+            name.c_str(),
+            image.c_str(),
+            price.c_str());
+
         Utils::products.push_back(Product{url, name, image, price});
     }
 
     Utils::export_to_csv("products.csv");
+    LOG_INFO("[HtmlParser::parse] Parsing finished, total products: %zu", Utils::products.size());
 }
