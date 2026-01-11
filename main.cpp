@@ -1,5 +1,6 @@
 #include "HtmlParser.hpp"
 #include "HttpsClient.hpp"
+#include "Utils.hpp"
 #include <curl/curl.h>
 #include <fstream>
 #include <iostream>
@@ -14,17 +15,14 @@ int main()
     curl_global_init(CURL_GLOBAL_ALL);
 
     init_consoleLog(stdout);
-
     set_log_level(INFO);
 
     HttpsClient client;
 
     std::string url = "https://www.scrapingcourse.com/ecommerce/";
-
     std::string document = client.get_request(url);
 
     std::string filename = "page.html";
-
     std::ofstream out(filename);
     if (out.is_open())
     {
@@ -39,15 +37,18 @@ int main()
 
     HtmlParser parser(document);
 
-    Utils::filter_csv_by_price("products.csv", 40, 50);
+    auto &repo = ProductRepository::instance();
 
-    auto prod = Utils::find_product_by_name("products.csv", "Ana Running Short");
+    auto filtered = Utils::filter_products_by_price(repo.get_all(), 40.0, 50.0);
+
+    Utils::export_to_csv("filtered_products.csv", filtered);
+
+    auto prod = Utils::find_product_by_name(repo.get_all(), "Ana Running Short");
     if (prod)
         std::cout << prod->name << " " << prod->price << "\n";
     else
-        std::cout << "error\n";
+        std::cout << "Product not found\n";
 
     curl_global_cleanup();
-
     return 0;
 }
