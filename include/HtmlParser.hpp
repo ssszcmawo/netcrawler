@@ -1,4 +1,5 @@
 #pragma once
+#include "ProductRepository.hpp"
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -8,14 +9,6 @@
 #include <optional>
 #include <string_view>
 #include <vector>
-
-struct Product
-{
-    std::string url;
-    std::string name;
-    std::string image;
-    std::string price;
-};
 
 namespace Utils
 {
