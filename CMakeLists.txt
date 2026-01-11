@@ -15,6 +15,7 @@ add_executable(WebCrawler
     src/HtmlParser.cpp
     thirdparty/slogger/slogger.c
     thirdparty/slogger/zip.c
+    src/Utils.cpp
 )
 
 find_package(CURL REQUIRED)
