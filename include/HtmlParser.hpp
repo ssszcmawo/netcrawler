@@ -10,20 +10,6 @@
 #include <string_view>
 #include <vector>
 
-namespace Utils
-{
-extern std::vector<Product> products;
-
-std::string escape_csv(const std::string &field);
-std::optional<double> parse_price(const std::string_view str);
-std::vector<Product> read_csv(const std::string &filename);
-void export_to_csv(const std::string &filename);
-std::optional<Product> find_product_by_name(const std::string &filename,
-    const std::string &name);
-void filter_csv_by_price(const std::string &filename, double min, double max);
-const std::vector<Product> &get_products();
-} // namespace Utils
-
 class HtmlParser
 {
   public:
