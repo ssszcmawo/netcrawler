@@ -1,0 +1,170 @@
+#include "Utils.hpp"
+#include <algorithm>
+#include <cctype>
+#include <filesystem>
+#include <fstream>
+extern "C"
+{
+#include "slogger.h"
+}
+
+namespace fs = std::filesystem;
+
+namespace Utils
+{
+std::string escape_csv(const std::string &field)
+{
+    std::string result = "\"";
+    for (char c : field)
+    {
+        if (c == '"')
+            result += "\"\"";
+        else
+            result += c;
+    }
+    result += "\"";
+    return result;
+}
+
+std::optional<double> parse_price(std::string_view str)
+{
+    std::string clean;
+    for (char c : str)
+    {
+        if (std::isdigit(static_cast<unsigned char>(c)) || c == '.')
+            clean += c;
+    }
+    if (clean.empty())
+    {
+        LOG_DEBUG("[parse_price] Empty numeric value from: %.*s", (int)str.size(), str.data());
+        return std::nullopt;
+    }
+    try
+    {
+        return std::stod(clean);
+    }
+    catch (...)
+    {
+        LOG_ERROR("[parse_price] Failed to convert: %.*s", (int)str.size(), str.data());
+        return std::nullopt;
+    }
+}
+
+std::string get_csv_dir()
+{
+    fs::path dir = fs::current_path().parent_path() / "csv_files";
+    if (!fs::exists(dir))
+    {
+        if (fs::create_directory(dir))
+            LOG_INFO("[Utils] Folder created: %s", dir.string().c_str());
+        else
+            LOG_ERROR("[Utils] Failed to create folder: %s", dir.string().c_str());
+    }
+    return dir.string();
+}
+
+void export_to_csv(const std::string &filename, const std::vector<Product> &products)
+{
+    fs::path csv_path = fs::path(get_csv_dir()) / filename;
+    std::ofstream csv_file(csv_path);
+    if (!csv_file)
+    {
+        LOG_ERROR("[export_to_csv] Failed to open file: %s", csv_path.string().c_str());
+        return;
+    }
+
+    csv_file << "url,name,image,price\n";
+    for (const auto &p : products)
+        csv_file << escape_csv(p.url) << "," << escape_csv(p.name) << "," << escape_csv(p.image) << "," << escape_csv(p.price) << "\n";
+
+    LOG_INFO("[export_to_csv] CSV saved to: %s", csv_path.string().c_str());
+}
+
+std::vector<Product> read_csv(const std::string &filename)
+{
+    std::vector<Product> read_products;
+    fs::path csv_path = fs::path(get_csv_dir()) / filename;
+
+    if (!fs::exists(csv_path))
+    {
+        LOG_ERROR("[read_csv] CSV file not found: %s", csv_path.string().c_str());
+        return read_products;
+    }
+
+    std::ifstream file(csv_path);
+    if (!file.is_open())
+    {
+        LOG_ERROR("[read_csv] Failed to open CSV file: %s", csv_path.string().c_str());
+        return read_products;
+    }
+
+    std::string line;
+    std::getline(file, line);
+
+    while (std::getline(file, line))
+    {
+        std::string url, name, image, price;
+        auto read_field = [&](std::string &dest)
+        {
+            if (line.empty())
+                return;
+            if (line.front() == '"')
+            {
+                line.erase(0, 1);
+                auto pos = line.find("\"");
+                if (pos != std::string::npos)
+                {
+                    dest = line.substr(0, pos);
+                    line.erase(0, pos + 2);
+                }
+            }
+            else
+            {
+                auto pos = line.find(',');
+                if (pos != std::string::npos)
+                {
+                    dest = line.substr(0, pos);
+                    line.erase(0, pos + 1);
+                }
+                else
+                {
+                    dest = line;
+                    line.clear();
+                }
+            }
+        };
+
+        read_field(url);
+        read_field(name);
+        read_field(image);
+        read_field(price);
+        read_products.push_back({url, name, image, price});
+    }
+
+    LOG_INFO("[read_csv] Total products read: %zu", read_products.size());
+    return read_products;
+}
+
+std::optional<Product> find_product_by_name(const std::vector<Product> &products, const std::string &name)
+{
+    auto it = std::find_if(products.begin(), products.end(), [&](const Product &p)
+        { return p.name == name; });
+    if (it != products.end())
+        return *it;
+    return std::nullopt;
+}
+
+std::vector<Product> filter_products_by_price(const std::vector<Product> &products, double min, double max)
+{
+    std::vector<Product> filtered;
+    std::copy_if(products.begin(), products.end(), std::back_inserter(filtered), [&](const Product &p)
+        {
+                         auto price = parse_price(p.price);
+                         return price && *price >= min && *price <= max; });
+
+    std::sort(filtered.begin(), filtered.end(), [](const Product &a, const Product &b)
+        { return parse_price(a.price).value_or(0.0) < parse_price(b.price).value_or(0.0); });
+
+    return filtered;
+}
+} // namespace Utils
