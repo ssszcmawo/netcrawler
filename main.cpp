@@ -13,7 +13,7 @@ int main()
 {
     curl_global_init(CURL_GLOBAL_ALL);
 
-    init_consoleLog(stderr);
+    init_consoleLog(stdout);
 
     set_log_level(INFO);
 
