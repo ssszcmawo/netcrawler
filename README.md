@@ -1,0 +1,1 @@
+A simple educational web crawler written in C++ that demonstrates how to fetch web pages, parse HTML content, extract links, and traverse websites. The project is designed for learning purposes and focuses on core networking, string processing, and data structure concepts rather than large-scale crawling.
