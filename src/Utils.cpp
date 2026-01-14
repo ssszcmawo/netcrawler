@@ -1,6 +1,7 @@
 #include "Utils.hpp"
 #include <algorithm>
 #include <cctype>
+#include <csv2/reader.hpp>
 #include <filesystem>
 #include <fstream>
 extern "C"
@@ -12,6 +13,52 @@ namespace fs = std::filesystem;
 
 namespace Utils
 {
+
+ProductXPathConfig load_xpath_config()
+{
+    ProductXPathConfig config;
+
+    fs::path json_path = fs::current_path().parent_path() / "products_xpath.json";
+
+    if (!fs::exists(json_path))
+    {
+        throw std::runtime_error("Cannot find json config: " + json_path.string());
+    }
+
+    std::ifstream file(json_path);
+
+    if (!file.is_open())
+    {
+        throw std::runtime_error("Cannot open config file: " + json_path.string());
+    }
+
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    std::string content = buffer.str();
+
+    content.erase(std::remove_if(content.begin(), content.end(), ::isspace), content.end());
+
+    auto get_value = [&](const std::string &key) -> std::string
+    {
+        std::string pattern = "\"" + key + "\":\"";
+        auto start = content.find(pattern);
+        if (start == std::string::npos)
+            return "";
+        start += pattern.size();
+        auto end = content.find("\"", start);
+        if (end == std::string::npos)
+            return "";
+        return content.substr(start, end - start);
+    };
+
+    config.product_item = get_value("product_item");
+    config.url = get_value("url");
+    config.image = get_value("image");
+    config.name = get_value("name");
+    config.price = get_value("price");
+
+    return config;
+}
 std::string escape_csv(const std::string &field)
 {
     std::string result = "\"";
