@@ -13,9 +13,13 @@ extern "C"
 int main()
 {
     curl_global_init(CURL_GLOBAL_ALL);
-
+#ifdef DEBUG_BUILD
     init_consoleLog(stdout);
     set_log_level(INFO);
+#else
+    init_fileLog("log_file", 1024 * 1024, true);
+    set_log_level(INFO);
+#endif
 
     HttpsClient client;
 
@@ -35,7 +39,11 @@ int main()
         std::cerr << "Could not open page.html\n";
     }
 
-    HtmlParser parser(document);
+    HtmlParser parser;
+
+    ProductXPathConfig config = Utils::load_xpath_config();
+
+    parser.parse(document, config);
 
     auto &repo = ProductRepository::instance();
 
