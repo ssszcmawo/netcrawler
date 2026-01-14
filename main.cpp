@@ -41,9 +41,16 @@ int main()
 
     HtmlParser parser;
 
-    ProductXPathConfig config = Utils::load_xpath_config();
+    try
+    {
+        ProductXPathConfig config = Utils::load_xpath_config();
 
-    parser.parse(document, config);
+        parser.parse(document, config);
+    }
+    catch (const std::exception &e)
+    {
+        LOG_ERROR("Failed to load XPath config: %s", e.what());
+    }
 
     auto &repo = ProductRepository::instance();
 
