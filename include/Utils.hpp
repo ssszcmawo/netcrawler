@@ -4,8 +4,18 @@
 #include <string>
 #include <vector>
 
+struct ProductXPathConfig
+{
+    std::string product_item;
+    std::string url;
+    std::string image;
+    std::string name;
+    std::string price;
+};
+
 namespace Utils
 {
+ProductXPathConfig load_xpath_config();
 std::string escape_csv(const std::string &field);
 std::optional<double> parse_price(std::string_view str);
 std::string get_csv_dir();
