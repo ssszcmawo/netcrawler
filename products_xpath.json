@@ -1,0 +1,7 @@
+{
+    "product_item": "//li[contains(@class, 'product')]",
+    "url": ".//a",
+    "image": ".//img",
+    "name": ".//a/h2",
+    "price": ".//a/span"
+}
