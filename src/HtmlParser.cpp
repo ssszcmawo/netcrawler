@@ -10,7 +10,7 @@ extern "C"
 #include "slogger.h"
 }
 
-void HtmlParser::parse(const std::string &html)
+void HtmlParser::parse(const std::string &html, ProductXPathConfig &config)
 {
     LOG_INFO("[HtmlParser::parse] Parsing started, HTML size: %zu", html.size());
 
@@ -32,7 +32,7 @@ void HtmlParser::parse(const std::string &html)
     }
 
     XmlXPathObjectWrapper html_elements(xmlXPathEvalExpression(
-        reinterpret_cast<const xmlChar *>("//li[contains(@class, 'product')]"), context));
+        reinterpret_cast<const xmlChar *>(config.product_item.c_str()), context));
 
     if (!html_elements || !html_elements->nodesetval)
     {
@@ -48,12 +48,11 @@ void HtmlParser::parse(const std::string &html)
         if (!product_node)
             continue;
 
-        auto get_text_from_xpath = [&](xmlNodePtr base_node, const char *xpath_expr) -> std::string
+        auto get_text_from_xpath = [&](xmlNodePtr base_node, const std::string &xpath_expr) -> std::string
         {
             context->node = base_node;
             XmlXPathObjectWrapper obj(xmlXPathEvalExpression(
-                reinterpret_cast<const xmlChar *>(xpath_expr),
-                context));
+                reinterpret_cast<const xmlChar *>(xpath_expr.c_str()), context));
 
             if (!obj || !obj->nodesetval || obj->nodesetval->nodeNr == 0)
                 return "";
@@ -70,12 +69,11 @@ void HtmlParser::parse(const std::string &html)
             return result;
         };
 
-        auto get_attr_from_xpath = [&](const char *xpath_expr, const char *attr) -> std::string
+        auto get_attr_from_xpath = [&](xmlNodePtr base_node, const std::string &xpath_expr, const char *attr) -> std::string
         {
-            context->node = product_node;
+            context->node = base_node;
             XmlXPathObjectWrapper obj(xmlXPathEvalExpression(
-                reinterpret_cast<const xmlChar *>(xpath_expr),
-                context));
+                reinterpret_cast<const xmlChar *>(xpath_expr.c_str()), context));
 
             if (!obj || !obj->nodesetval || obj->nodesetval->nodeNr == 0)
                 return "";
@@ -92,10 +90,10 @@ void HtmlParser::parse(const std::string &html)
             return result;
         };
 
-        std::string url = get_attr_from_xpath(".//a", "href");
-        std::string image = get_attr_from_xpath(".//img", "src");
-        std::string name = get_text_from_xpath(product_node, ".//a/h2");
-        std::string price = get_text_from_xpath(product_node, ".//a/span");
+        std::string url = get_attr_from_xpath(product_node, config.url, "href");
+        std::string image = get_attr_from_xpath(product_node, config.image, "src");
+        std::string name = get_text_from_xpath(product_node, config.name);
+        std::string price = get_text_from_xpath(product_node, config.price);
 
         LOG_DEBUG("[HtmlParser::parse] Product parsed: %s | %s | %s | %s",
             url.c_str(),
