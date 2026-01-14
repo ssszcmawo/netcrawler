@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 include_directories(
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/thirdparty/slogger
+    ${PROJECT_SOURCE_DIR}/thirdparty/csv2/include
 )
 
 add_executable(WebCrawler
@@ -17,6 +18,8 @@ add_executable(WebCrawler
     thirdparty/slogger/zip.c
     src/Utils.cpp
 )
+
+set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wextra")
 
 find_package(CURL REQUIRED)
 find_package(LibXml2 REQUIRED)
@@ -35,4 +38,8 @@ set_target_properties(WebCrawler PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
 
+target_compile_definitions(WebCrawler PRIVATE 
+    $<$<CONFIG:DEBUG>:DEBUG_BUILD>
+    $<$<CONFIG:RELEASE>:RELEASE_BUILD>
+)
 
