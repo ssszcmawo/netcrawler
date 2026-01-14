@@ -1,5 +1,6 @@
 #pragma once
 #include "ProductRepository.hpp"
+#include "Utils.hpp"
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -13,15 +14,11 @@
 class HtmlParser
 {
   public:
-    HtmlParser(const std::string &html)
-    {
-        parse(html);
-    }
+    HtmlParser() = default;
     ~HtmlParser() {};
+    void parse(const std::string &html, ProductXPathConfig &config);
 
   private:
-    void parse(const std::string &html);
-
     struct XmlDocWrapper
     {
         xmlDocPtr doc;
