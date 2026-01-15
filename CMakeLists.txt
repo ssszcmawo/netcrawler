@@ -41,5 +41,4 @@ set_target_properties(WebCrawler PROPERTIES
 target_compile_definitions(WebCrawler PRIVATE 
     $<$<CONFIG:DEBUG>:DEBUG_BUILD>
     $<$<CONFIG:RELEASE>:RELEASE_BUILD>
-)
-
+) 
