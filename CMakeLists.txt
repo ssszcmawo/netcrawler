@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 include_directories(
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/thirdparty/slogger
-    ${PROJECT_SOURCE_DIR}/thirdparty/csv2/include
+    ${PROJECT_SOURCE_DIR}/thirdparty/fast-cpp-csv-parser
 )
 
 add_executable(WebCrawler
