@@ -1,7 +1,6 @@
 #include "Utils.hpp"
 #include <algorithm>
 #include <cctype>
-#include <csv2/reader.hpp>
 #include <filesystem>
 #include <fstream>
 extern "C"
