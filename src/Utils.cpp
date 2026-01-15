@@ -3,6 +3,7 @@
 #include <cctype>
 #include <filesystem>
 #include <fstream>
+#include "csv.h"
 extern "C"
 {
 #include "slogger.h"
@@ -128,67 +129,64 @@ void export_to_csv(const std::string &filename, const std::vector<Product> &prod
 
 std::vector<Product> read_csv(const std::string &filename)
 {
-    std::vector<Product> read_products;
+    std::vector<Product> products;
     fs::path csv_path = fs::path(get_csv_dir()) / filename;
 
     if (!fs::exists(csv_path))
     {
         LOG_ERROR("[read_csv] CSV file not found: %s", csv_path.string().c_str());
-        return read_products;
+        return products;
     }
 
-    std::ifstream file(csv_path);
-    if (!file.is_open())
-    {
-        LOG_ERROR("[read_csv] Failed to open CSV file: %s", csv_path.string().c_str());
-        return read_products;
-    }
+    io::CSVReader<4> in(csv_path.string());
 
-    std::string line;
-    std::getline(file, line);
+    in.read_header(io::ignore_extra_column,"url","name","image","price");
 
-    while (std::getline(file, line))
+    try
     {
-        std::string url, name, image, price;
-        auto read_field = [&](std::string &dest)
+      std::string url,name,image,price;
+
+      while(in.read_row(url,name,image,price))
+      {
+        if(url.empty() && name.empty() && image.empty() && price.empty()) continue;
+
+        auto price_value = parse_price(price);
+
+        if(!price_value.has_value())
         {
-            if (line.empty())
-                return;
-            if (line.front() == '"')
-            {
-                line.erase(0, 1);
-                auto pos = line.find("\"");
-                if (pos != std::string::npos)
-                {
-                    dest = line.substr(0, pos);
-                    line.erase(0, pos + 2);
-                }
-            }
-            else
-            {
-                auto pos = line.find(',');
-                if (pos != std::string::npos)
-                {
-                    dest = line.substr(0, pos);
-                    line.erase(0, pos + 1);
-                }
-                else
-                {
-                    dest = line;
-                    line.clear();
-                }
-            }
-        };
+          LOG_DEBUG("[read_csv] Skipping product with invalid price");
+          continue;
+        }
 
-        read_field(url);
-        read_field(name);
-        read_field(image);
-        read_field(price);
-        read_products.push_back({url, name, image, price});
+        url.erase(0,url.find_first_not_of("\t\n\r"));
+        url.erase(url.find_last_not_of("\t\n\r") + 1);
+        name.erase(0,name.find_first_not_of("\t\n\r"));
+        name.erase(name.find_last_not_of("\t\n\r") + 1);
+        image.erase(0,name.find_first_not_of("\t\n\r"));
+        image.erase(image.find_last_not_of("\t\n\r") + 1);
+
+        auto duplicate = std::find_if(products.begin(), products.end(), [&](const Product& p){
+            return p.name == name;
+            });
+
+        if(duplicate != products.end())
+          continue;
+
+
+        products.push_back(Product{
+            url,
+            name,
+            image,
+            price
+            });
+      }
+    }catch(const std::exception& e_row)
+    {
+      LOG_ERROR("[read_csv] exception while parsing row: %s", e_row.what());
     }
 
-    LOG_INFO("[read_csv] Total products read: %zu", read_products.size());
-    return read_products;
+    LOG_INFO("[read_csv] Total products read: %zu", products.size());
+    return products;
 }
 
 std::optional<Product> find_product_by_name(const std::vector<Product> &products, const std::string &name)
