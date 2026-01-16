@@ -199,8 +199,20 @@ std::vector<Product> read_csv(const std::string &filename)
 
 std::optional<Product> find_product_by_name(const std::vector<Product> &products, const std::string &name)
 {
-    auto it = std::find_if(products.begin(), products.end(), [&](const Product &p)
-        { return p.name == name; });
+    std::string name_lower = name;
+
+    std::transform(name_lower.begin(),name_lower.end(),name_lower.begin(),
+        [](unsigned char c){ return std::tolower(c);});
+    
+    auto it = std::find_if(products.begin(), products.end(), [&name_lower](const Product &p)
+        {
+          if (p.name.size() != name_lower.size())return false;
+
+          return std::equal(p.name.begin(),p.name.end(),name_lower.begin(),
+              [](unsigned char a,unsigned char b){
+                  return std::tolower(a) == std::tolower(b);
+              });
+        });
     if (it != products.end())
         return *it;
     return std::nullopt;
