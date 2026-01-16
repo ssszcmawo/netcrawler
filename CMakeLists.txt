@@ -5,17 +5,19 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 include_directories(
-    ${PROJECT_SOURCE_DIR}/include
-    ${PROJECT_SOURCE_DIR}/thirdparty/slogger
-    ${PROJECT_SOURCE_DIR}/thirdparty/fast-cpp-csv-parser
+    ${PROJECT_SOURCE_DIR}/include 
 )
 
+file(GLOB SLOGGER_SRC
+      ${PROJECT_SOURCE_DIR}/thirdparty/slogger/src/*.c
+    )
+
+add_library(slogger STATIC ${SLOGGER_SRC})
+target_include_directories(slogger PUBLIC ${PROJECT_SOURCE_DIR}/thirdparty/slogger/src)
 add_executable(WebCrawler
     main.cpp
     src/HttpsClient.cpp
-    src/HtmlParser.cpp
-    thirdparty/slogger/slogger.c
-    thirdparty/slogger/zip.c
+    src/HtmlParser.cpp 
     src/Utils.cpp
 )
 
@@ -25,11 +27,14 @@ find_package(CURL REQUIRED)
 find_package(LibXml2 REQUIRED)
 
 target_include_directories(WebCrawler PRIVATE
+    ${PROJECT_SOURCE_DIR}/thirdparty/fast-cpp-csv-parser
+    ${PROJECT_SOURCE_DIR}/thirdparty/slogger/src
     ${CURL_INCLUDE_DIRS}
     ${LIBXML2_INCLUDE_DIRS}
 )
 
 target_link_libraries(WebCrawler PRIVATE
+    slogger
     ${CURL_LIBRARIES}
     ${LIBXML2_LIBRARIES}
 )
