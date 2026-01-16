@@ -3,6 +3,7 @@
 #include <cctype>
 #include <filesystem>
 #include <fstream>
+#include <unordered_set>
 #include "csv.h"
 extern "C"
 {
@@ -160,6 +161,11 @@ std::vector<Product> read_csv(const std::string &filename)
       while(in.read_row(url,name,image,price))
       {
         if(url.empty() && name.empty() && image.empty() && price.empty()) continue;
+       
+        trim(url);
+        trim(name);
+        trim(image);
+        trim(price);
 
         auto price_value = parse_price(price);
 
@@ -168,24 +174,20 @@ std::vector<Product> read_csv(const std::string &filename)
           LOG_DEBUG("[read_csv] Skipping product with invalid price");
           continue;
         }
-        
-        url = std::string(trim(url));
-        name = std::string(trim(name));
-        image = std::string(trim(image));
+ 
+        std::unordered_set<std::string> seen_names;  
 
-        auto duplicate = std::find_if(products.begin(), products.end(), [&](const Product& p){
-            return p.name == name;
-            });
-
-        if(duplicate != products.end())
+        if(!seen_names.insert(name).second)
+        {
+          LOG_DEBUG("[read_csv] Skipping duplicate name: %s", name.c_str());
           continue;
-
-
+        }
+      
         products.push_back(Product{
-            url,
-            name,
-            image,
-            price
+            std::move(url),
+            std::move(name),
+            std::move(image),
+            std::move(price)
             });
       }
     }catch(const std::exception& e_row)
@@ -232,15 +234,12 @@ std::vector<Product> filter_products_by_price(const std::vector<Product> &produc
     return filtered;
 }
 
-std::string trim(std::string& str)
+void trim(std::string& str)
 {
-  auto first = std::find_if(str.begin(),str.end(),[](unsigned char c){ return !std::isspace(c);});
+  str.erase(str.begin(),std::find_if(str.begin(),str.end(),
+        [](unsigned char c){ return !std::isspace(c);}));
 
-  if(first == str.end()) return "";
-
-  auto last = std::find_if(str.rbegin(),str.rend(),
-      [](unsigned char c){ return !std::isspace(c);}).base();
-
-  return std::string(first,last);
+  str.erase(std::find_if(str.rbegin(),str.rend(),
+      [](unsigned char c){ return !std::isspace(c); }).base(),str.end());
 }
 } // namespace Utils
