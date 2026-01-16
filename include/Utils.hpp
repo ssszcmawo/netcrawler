@@ -23,4 +23,5 @@ void export_to_csv(const std::string &filename, const std::vector<Product> &prod
 std::vector<Product> read_csv(const std::string &filename);
 std::optional<Product> find_product_by_name(const std::vector<Product> &products, const std::string &name);
 std::vector<Product> filter_products_by_price(const std::vector<Product> &products, double min, double max);
+std::string trim(std::string& str);
 } // namespace Utils
