@@ -206,13 +206,14 @@ std::optional<Product> find_product_by_name(const std::vector<Product> &products
     
     auto it = std::find_if(products.begin(), products.end(), [&name_lower](const Product &p)
         {
-          if (p.name.size() != name_lower.size())return false;
+          std::string product_name_lower = p.name;
 
-          return std::equal(p.name.begin(),p.name.end(),name_lower.begin(),
-              [](unsigned char a,unsigned char b){
-                  return std::tolower(a) == std::tolower(b);
-              });
+          std::transform(product_name_lower.begin(),product_name_lower.end(),product_name_lower.begin(),
+              [](unsigned char c){ return std::tolower(c);});
+
+          return product_name_lower.find(name_lower)  != std::string::npos;
         });
+
     if (it != products.end())
         return *it;
     return std::nullopt;
