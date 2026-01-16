@@ -76,11 +76,21 @@ std::string escape_csv(const std::string &field)
 std::optional<double> parse_price(std::string_view str)
 {
     std::string clean;
+    bool dot_used = false;
+
+
     for (char c : str)
     {
-        if (std::isdigit(static_cast<unsigned char>(c)) || c == '.')
+        if (std::isdigit(static_cast<unsigned char>(c)))
             clean += c;
+
+        else if((c == '.' || c == ',') && !dot_used)
+        {
+          clean += '.';
+          dot_used = true;
+        }
     }
+
     if (clean.empty())
     {
         LOG_DEBUG("[parse_price] Empty numeric value from: %.*s", (int)str.size(), str.data());
@@ -95,6 +105,7 @@ std::optional<double> parse_price(std::string_view str)
         LOG_ERROR("[parse_price] Failed to convert: %.*s", (int)str.size(), str.data());
         return std::nullopt;
     }
+
 }
 
 std::string get_csv_dir()
@@ -157,13 +168,10 @@ std::vector<Product> read_csv(const std::string &filename)
           LOG_DEBUG("[read_csv] Skipping product with invalid price");
           continue;
         }
-
-        url.erase(0,url.find_first_not_of("\t\n\r"));
-        url.erase(url.find_last_not_of("\t\n\r") + 1);
-        name.erase(0,name.find_first_not_of("\t\n\r"));
-        name.erase(name.find_last_not_of("\t\n\r") + 1);
-        image.erase(0,name.find_first_not_of("\t\n\r"));
-        image.erase(image.find_last_not_of("\t\n\r") + 1);
+        
+        url = std::string(trim(url));
+        name = std::string(trim(name));
+        image = std::string(trim(image));
 
         auto duplicate = std::find_if(products.begin(), products.end(), [&](const Product& p){
             return p.name == name;
@@ -210,5 +218,17 @@ std::vector<Product> filter_products_by_price(const std::vector<Product> &produc
         { return parse_price(a.price).value_or(0.0) < parse_price(b.price).value_or(0.0); });
 
     return filtered;
+}
+
+std::string trim(std::string& str)
+{
+  auto first = std::find_if(str.begin(),str.end(),[](unsigned char c){ return !std::isspace(c);});
+
+  if(first == str.end()) return "";
+
+  auto last = std::find_if(str.rbegin(),str.rend(),
+      [](unsigned char c){ return !std::isspace(c);}).base();
+
+  return std::string(first,last);
 }
 } // namespace Utils
