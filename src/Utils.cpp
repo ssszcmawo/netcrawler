@@ -5,10 +5,8 @@
 #include <fstream>
 #include <unordered_set>
 #include "csv.h"
-extern "C"
-{
 #include "slogger.h"
-}
+
 
 namespace fs = std::filesystem;
 

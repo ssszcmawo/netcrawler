@@ -1,9 +1,6 @@
 #include "HttpsClient.hpp"
-
-extern "C"
-{
 #include "slogger.h"
-}
+
 
 HttpsClient::HttpsClient() :
     curl(curl_easy_init()),

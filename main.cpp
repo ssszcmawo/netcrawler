@@ -4,11 +4,8 @@
 #include <curl/curl.h>
 #include <fstream>
 #include <iostream>
-
-extern "C"
-{
 #include "slogger.h"
-}
+
 
 int main()
 {

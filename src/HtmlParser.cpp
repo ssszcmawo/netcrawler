@@ -4,11 +4,8 @@
 #include <cctype>
 #include <sstream>
 #include <string>
-
-extern "C"
-{
 #include "slogger.h"
-}
+
 
 void HtmlParser::parse(const std::string &html, ProductXPathConfig &config)
 {
