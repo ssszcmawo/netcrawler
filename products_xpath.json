@@ -3,5 +3,7 @@
     "url": ".//a",
     "image": ".//img",
     "name": ".//a/h2",
-    "price": ".//a/span"
+    "price": ".//a/span",
+    "first_page": "https://www.scrapingcourse.com/ecommerce/page/1/",
+    "page_numbers": "//a[@class='page-numbers']"
 }
