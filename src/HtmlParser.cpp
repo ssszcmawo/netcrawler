@@ -1,11 +1,10 @@
 #include "HtmlParser.hpp"
-#include "Utils.hpp"
+#include "CSV.hpp"
+#include "slogger.h"
 #include <algorithm>
 #include <cctype>
 #include <sstream>
 #include <string>
-#include "slogger.h"
-
 
 void HtmlParser::parse(const std::string &html, ProductXPathConfig &config)
 {
@@ -101,7 +100,7 @@ void HtmlParser::parse(const std::string &html, ProductXPathConfig &config)
         repo.add(Product{url, name, image, price});
     }
 
-    Utils::export_to_csv("products.csv", repo.get_all());
+    CSV::export_to_csv("products.csv", repo.get_all());
 
     LOG_INFO("[HtmlParser::parse] Parsing finished, total products: %zu", repo.get_all().size());
 }

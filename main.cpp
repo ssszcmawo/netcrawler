@@ -1,11 +1,12 @@
+#include "CSV.hpp"
 #include "HtmlParser.hpp"
 #include "HttpsClient.hpp"
+#include "ProductXPathConfig.hpp"
 #include "Utils.hpp"
+#include "slogger.h"
 #include <curl/curl.h>
 #include <fstream>
 #include <iostream>
-#include "slogger.h"
-
 
 int main()
 {
@@ -40,7 +41,7 @@ int main()
 
     try
     {
-        ProductXPathConfig config = Utils::load_xpath_config();
+        auto config = ProductXPathConfig::from_json_file("products_xpath.json");
 
         parser.parse(document, config);
     }
@@ -53,7 +54,7 @@ int main()
 
     auto filtered = Utils::filter_products_by_price(repo.get_all(), 40.0, 50.0);
 
-    Utils::export_to_csv("filtered_products.csv", filtered);
+    CSV::export_to_csv("filtered_products.csv", filtered);
 
     auto prod = Utils::find_product_by_name(repo.get_all(), "Ana Running Short");
     if (prod)
