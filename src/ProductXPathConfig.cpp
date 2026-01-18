@@ -23,7 +23,7 @@ ProductXPathConfig ProductXPathConfig::from_json_string(const std::string &json_
     return config;
 }
 
-bool ProductXPathConfig::from_json_file(const std::string& path)
+bool ProductXPathConfig::from_json_file(const std::string &path)
 {
     std::ifstream file(path);
     if (!file)
@@ -33,11 +33,11 @@ bool ProductXPathConfig::from_json_file(const std::string& path)
     file >> j;
 
     product_item = j.value("product_item", "");
-    url          = j.value("url", "");
-    image        = j.value("image", "");
-    name         = j.value("name", "");
-    price        = j.value("price", "");
-    first_page   = j.value("first_page", "");
+    url = j.value("url", "");
+    image = j.value("image", "");
+    name = j.value("name", "");
+    price = j.value("price", "");
+    first_page = j.value("first_page", "");
     page_numbers = j.value("page_numbers", "");
 
     return !product_item.empty() && !first_page.empty();

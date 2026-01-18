@@ -10,72 +10,72 @@
 #include <optional>
 #include <string_view>
 #include <vector>
- 
+
 struct XmlDocWrapper
+{
+    xmlDocPtr doc;
+    XmlDocWrapper(xmlDocPtr d) :
+        doc(d)
     {
-        xmlDocPtr doc;
-        XmlDocWrapper(xmlDocPtr d) :
-            doc(d)
-        {
-        }
-        ~XmlDocWrapper()
-        {
-            if (doc)
-                xmlFreeDoc(doc);
-        }
-        operator xmlDocPtr() const
-        {
-            return doc;
-        }
-        xmlDocPtr operator->() const
-        {
-            return doc;
-        }
-    };
+    }
+    ~XmlDocWrapper()
+    {
+        if (doc)
+            xmlFreeDoc(doc);
+    }
+    operator xmlDocPtr() const
+    {
+        return doc;
+    }
+    xmlDocPtr operator->() const
+    {
+        return doc;
+    }
+};
 
-    struct XmlXPathContextWrapper
+struct XmlXPathContextWrapper
+{
+    xmlXPathContextPtr ctx;
+    XmlXPathContextWrapper(xmlXPathContextPtr c) :
+        ctx(c)
     {
-        xmlXPathContextPtr ctx;
-        XmlXPathContextWrapper(xmlXPathContextPtr c) :
-            ctx(c)
-        {
-        }
-        ~XmlXPathContextWrapper()
-        {
-            if (ctx)
-                xmlXPathFreeContext(ctx);
-        }
-        operator xmlXPathContextPtr() const
-        {
-            return ctx;
-        }
-        xmlXPathContextPtr operator->() const
-        {
-            return ctx;
-        }
-    };
+    }
+    ~XmlXPathContextWrapper()
+    {
+        if (ctx)
+            xmlXPathFreeContext(ctx);
+    }
+    operator xmlXPathContextPtr() const
+    {
+        return ctx;
+    }
+    xmlXPathContextPtr operator->() const
+    {
+        return ctx;
+    }
+};
 
-    struct XmlXPathObjectWrapper
+struct XmlXPathObjectWrapper
+{
+    xmlXPathObjectPtr obj;
+    XmlXPathObjectWrapper(xmlXPathObjectPtr o) :
+        obj(o)
     {
-        xmlXPathObjectPtr obj;
-        XmlXPathObjectWrapper(xmlXPathObjectPtr o) :
-            obj(o)
-        {
-        }
-        ~XmlXPathObjectWrapper()
-        {
-            if (obj)
-                xmlXPathFreeObject(obj);
-        }
-        operator xmlXPathObjectPtr() const
-        {
-            return obj;
-        }
-        xmlXPathObjectPtr operator->() const
-        {
-            return obj;
-        }
-    };
+    }
+    ~XmlXPathObjectWrapper()
+    {
+        if (obj)
+            xmlXPathFreeObject(obj);
+    }
+    operator xmlXPathObjectPtr() const
+    {
+        return obj;
+    }
+    xmlXPathObjectPtr operator->() const
+    {
+        return obj;
+    }
+};
 
 class HtmlParser
 {
@@ -84,6 +84,5 @@ class HtmlParser
     ~HtmlParser() = default;
     std::vector<Product> parse(const std::string &html, ProductXPathConfig &config);
 
-  private: 
-
+  private:
 };

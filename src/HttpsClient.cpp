@@ -1,7 +1,6 @@
 #include "HttpsClient.hpp"
 #include "slogger.h"
 
-
 HttpsClient::HttpsClient() :
     curl(curl_easy_init()),
     timeout_seconds(10),

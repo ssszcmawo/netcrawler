@@ -7,9 +7,8 @@
 
 std::vector<Product> HtmlParser::parse(const std::string &html, ProductXPathConfig &config)
 {
-
     std::vector<Product> products;
-    LOG_INFO("[HtmlParser::parse] Parsing started, HTML size: %zu", html.size()); 
+    LOG_INFO("[HtmlParser::parse] Parsing started, HTML size: %zu", html.size());
 
     XmlDocWrapper doc(htmlReadMemory(html.c_str(), html.size(), nullptr, nullptr, HTML_PARSE_NOERROR));
     if (!doc)
@@ -96,7 +95,7 @@ std::vector<Product> HtmlParser::parse(const std::string &html, ProductXPathConf
             price.c_str());
 
         products.push_back(std::move(Product{url, name, image, price}));
-    } 
+    }
 
     LOG_INFO("[HtmlParser::parse] Parsing finished, total products: %zu", products.size());
     return products;

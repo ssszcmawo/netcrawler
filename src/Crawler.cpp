@@ -41,7 +41,7 @@ void Crawler::crawl_page(const std::string &url)
     discover_pages(html);
 }
 
-static std::string make_absolute_url(const std::string& base, const std::string& link)
+static std::string make_absolute_url(const std::string &base, const std::string &link)
 {
     if (link.rfind("http", 0) == 0)
         return link;
@@ -71,7 +71,6 @@ static std::string normalize_url(std::string url)
         url.pop_back();
     return url;
 }
-
 
 void Crawler::discover_pages(const std::string &html)
 {

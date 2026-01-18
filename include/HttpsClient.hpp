@@ -1,20 +1,20 @@
 #pragma once
-#include <iostream>
 #include <curl/curl.h>
+#include <iostream>
 
 class HttpsClient
 {
-public:
+  public:
     HttpsClient();
-   ~HttpsClient();
+    ~HttpsClient();
 
-    std::string get_request(const std::string& url);
+    std::string get_request(const std::string &url);
 
-private: 
-    static size_t write_callback(void* contents,std::size_t size,std::size_t nmemb,void* userp);
+  private:
+    static size_t write_callback(void *contents, std::size_t size, std::size_t nmemb, void *userp);
 
-private: 
-    CURL* curl;
+  private:
+    CURL *curl;
 
     long timeout_seconds;
     long connection_timeout_seconds;
