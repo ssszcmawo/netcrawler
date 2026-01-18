@@ -74,7 +74,6 @@ std::string HttpsClient::get_request(const std::string &url)
     if (res != CURLE_OK)
     {
         LOG_ERROR("[HttpsClient::get_request] Request failed: %s", error_buffer[0] ? error_buffer : curl_easy_strerror(res));
-        curl_easy_cleanup(curl);
         throw std::runtime_error(error_buffer[0] ? error_buffer : curl_easy_strerror(res));
     }
 
