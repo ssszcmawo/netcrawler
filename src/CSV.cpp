@@ -46,8 +46,14 @@ std::string get_csv_dir()
     return dir.string();
 }
 
-void export_to_csv(const std::string &filename, const std::vector<Product> &products)
+void export_to_csv(std::string& filename, const std::vector<Product> &products)
 {
+    std::string lower = filename;
+    std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c) { return std::tolower(c); });
+
+    if (lower.size() < 4 || lower.substr(lower.size() - 4) != ".csv")
+        filename += ".csv";
+
     fs::path csv_path = fs::path(get_csv_dir()) / filename;
     std::ofstream csv_file(csv_path);
     if (!csv_file)

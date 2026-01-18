@@ -9,6 +9,6 @@ namespace CSV
 std::string escape_csv(const std::string &field);
 std::optional<double> parse_price(std::string_view str);
 std::string get_csv_dir();
-void export_to_csv(const std::string &filename, const std::vector<Product> &products);
+void export_to_csv(std::string &filename, const std::vector<Product> &products);
 std::vector<Product> read_csv(const std::string &filename);
 } // namespace CSV
