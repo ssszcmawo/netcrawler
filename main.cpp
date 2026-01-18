@@ -44,10 +44,12 @@ int main(int argc,char **argv)
 
     Crawler crawler(config); 
 
+    std::string filename = "products";
+
     crawler.run();
 
     CSV::export_to_csv(
-        "products.csv",
+        filename,
         ProductRepository::instance().get_all()
     );
 
