@@ -36,8 +36,33 @@ void Crawler::crawl_page(const std::string &url)
         return;
     }
 
-    parser_.parse(html, config_);
+    auto products = parser_.parse(html, config_);
+    ProductRepository::instance().add_range(std::move(products));
     discover_pages(html);
+}
+
+static std::string make_absolute_url(const std::string& base, const std::string& link)
+{
+    if (link.rfind("http", 0) == 0)
+        return link;
+
+    if (link.front() == '/')
+    {
+        auto pos = base.find("://");
+        if (pos == std::string::npos)
+            return link;
+
+        pos = base.find('/', pos + 3);
+        if (pos == std::string::npos)
+            return base + link;
+
+        return base.substr(0, pos) + link;
+    }
+
+    if (base.back() == '/')
+        return base + link;
+
+    return base + "/" + link;
 }
 
 static std::string normalize_url(std::string url)
@@ -46,6 +71,7 @@ static std::string normalize_url(std::string url)
         url.pop_back();
     return url;
 }
+
 
 void Crawler::discover_pages(const std::string &html)
 {
@@ -85,23 +111,19 @@ void Crawler::discover_pages(const std::string &html)
         if (next.empty())
             continue;
 
-        if (next.find("/page/") == std::string::npos)
-            continue;
-
+        next = make_absolute_url(config_.first_page, next);
         next = normalize_url(next);
 
-        LOG_INFO("[Crawler::discover_pages] Found page link: %s", next.c_str());
+        if (next.find("/page/") == std::string::npos &&
+            next.find("page=") == std::string::npos &&
+            next.find("page-") == std::string::npos)
+        {
+            continue;
+        }
 
         if (pages_visited.insert(next).second)
         {
             pages_to_visit.push(next);
-            LOG_INFO("[Crawler::discover_pages] New page added: %s", next.c_str());
-        }
-        else
-        {
-            LOG_INFO("[Crawler::discover_pages] Page already visited: %s", next.c_str());
         }
     }
-
-    LOG_INFO("[Crawler::discover_pages] Queue size: %zu", pages_to_visit.size());
 }
