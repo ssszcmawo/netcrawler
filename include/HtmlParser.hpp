@@ -11,16 +11,8 @@
 #include <optional>
 #include <string_view>
 #include <vector>
-
-class HtmlParser
-{
-  public:
-    HtmlParser() = default;
-    ~HtmlParser() = default;
-    void parse(const std::string &html, ProductXPathConfig &config);
-
-  private:
-    struct XmlDocWrapper
+ 
+struct XmlDocWrapper
     {
         xmlDocPtr doc;
         XmlDocWrapper(xmlDocPtr d) :
@@ -85,4 +77,14 @@ class HtmlParser
             return obj;
         }
     };
+
+class HtmlParser
+{
+  public:
+    HtmlParser() = default;
+    ~HtmlParser() = default;
+    void parse(const std::string &html, ProductXPathConfig &config);
+
+  private: 
+
 };
