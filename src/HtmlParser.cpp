@@ -5,25 +5,24 @@
 #include <sstream>
 #include <string>
 
-void HtmlParser::parse(const std::string &html, ProductXPathConfig &config)
+std::vector<Product> HtmlParser::parse(const std::string &html, ProductXPathConfig &config)
 {
-    LOG_INFO("[HtmlParser::parse] Parsing started, HTML size: %zu", html.size());
 
-    auto &repo = ProductRepository::instance();
-    repo.clear();
+    std::vector<Product> products;
+    LOG_INFO("[HtmlParser::parse] Parsing started, HTML size: %zu", html.size()); 
 
     XmlDocWrapper doc(htmlReadMemory(html.c_str(), html.size(), nullptr, nullptr, HTML_PARSE_NOERROR));
     if (!doc)
     {
         LOG_ERROR("[HtmlParser::parse] Failed to parse HTML");
-        return;
+        return products;
     }
 
     XmlXPathContextWrapper context(xmlXPathNewContext(doc));
     if (!context)
     {
         LOG_ERROR("[HtmlParser::parse] Failed to create XPath context");
-        return;
+        return products;
     }
 
     XmlXPathObjectWrapper html_elements(xmlXPathEvalExpression(
@@ -32,7 +31,7 @@ void HtmlParser::parse(const std::string &html, ProductXPathConfig &config)
     if (!html_elements || !html_elements->nodesetval)
     {
         LOG_ERROR("[HtmlParser::parse] No product elements found in HTML");
-        return;
+        return products;
     }
 
     LOG_INFO("[HtmlParser::parse] Found %d product elements", html_elements->nodesetval->nodeNr);
@@ -96,8 +95,9 @@ void HtmlParser::parse(const std::string &html, ProductXPathConfig &config)
             image.c_str(),
             price.c_str());
 
-        repo.add(Product{url, name, image, price});
+        products.push_back(std::move(Product{url, name, image, price}));
     } 
 
-    LOG_INFO("[HtmlParser::parse] Parsing finished, total products: %zu", repo.get_all().size());
+    LOG_INFO("[HtmlParser::parse] Parsing finished, total products: %zu", products.size());
+    return products;
 }
