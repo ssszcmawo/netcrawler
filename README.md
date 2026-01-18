@@ -65,3 +65,7 @@ Example config:
   "page_numbers": "//a[@class='page-link']"
 }
 ```
+## Notes
+
+NetCrawler is meant for educational use only and is not intended for real-world web scraping.
+This project was tested only on the test site [scrappingcourse.com](https://www.scrapingcourse.com/ecommerce/). It has not been tested on any other sites.
