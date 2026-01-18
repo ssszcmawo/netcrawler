@@ -55,28 +55,49 @@ size_t HttpsClient::write_callback(void *contents, std::size_t size, std::size_t
 std::string HttpsClient::get_request(const std::string &url)
 {
     if (!curl)
-    {
-        LOG_ERROR("[HttpsClient::get_request] CURL not initialized");
         throw std::runtime_error("CURL not initialized");
-    }
-
-    LOG_INFO("[HttpsClient::get_request] Sending GET request to: %s", url.c_str());
 
     std::string response;
+    long http_code = 0;
+    const int max_retries = 3;
+    int attempt = 0;
 
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
-
-    CURLcode res = curl_easy_perform(curl);
-
-    if (res != CURLE_OK)
+    while (attempt < max_retries)
     {
-        LOG_ERROR("[HttpsClient::get_request] Request failed: %s", error_buffer[0] ? error_buffer : curl_easy_strerror(res));
-        throw std::runtime_error(error_buffer[0] ? error_buffer : curl_easy_strerror(res));
-    }
+        response.clear();
+        error_buffer[0] = '\0';
 
-    LOG_INFO("[HttpsClient::get_request] Request successful, response size: %zu bytes", response.size());
+        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+
+        CURLcode res = curl_easy_perform(curl);
+
+        if (res != CURLE_OK)
+        {
+            ++attempt;
+            if (attempt < max_retries)
+                continue;
+
+            throw std::runtime_error(error_buffer[0] ? error_buffer : curl_easy_strerror(res));
+        }
+
+        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+
+        if (http_code >= 400)
+        {
+            if ((http_code == 429 || http_code == 500 || http_code == 502 || http_code == 503 || http_code == 504) &&
+                attempt < max_retries - 1)
+            {
+                ++attempt;
+                continue;
+            }
+
+            throw std::runtime_error("HTTP error code: " + std::to_string(http_code));
+        }
+
+        break;
+    }
 
     return response;
 }
