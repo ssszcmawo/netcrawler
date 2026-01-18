@@ -1,5 +1,4 @@
 #pragma once
-#include "ProductRepository.hpp"
 #include "ProductXPathConfig.hpp"
 #include "Utils.hpp"
 #include <filesystem>
@@ -83,7 +82,7 @@ class HtmlParser
   public:
     HtmlParser() = default;
     ~HtmlParser() = default;
-    void parse(const std::string &html, ProductXPathConfig &config);
+    std::vector<Product> parse(const std::string &html, ProductXPathConfig &config);
 
   private: 
 
