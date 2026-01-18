@@ -11,6 +11,6 @@ struct ProductXPathConfig
     std::string first_page;
     std::string page_numbers;
 
-    static ProductXPathConfig from_json_string(const std::string &json_str);
-    static ProductXPathConfig from_json_file(const std::string &path);
+    ProductXPathConfig from_json_string(const std::string &json_str);
+    bool from_json_file(const std::string &path);
 };

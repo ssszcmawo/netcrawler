@@ -23,24 +23,22 @@ ProductXPathConfig ProductXPathConfig::from_json_string(const std::string &json_
     return config;
 }
 
-ProductXPathConfig ProductXPathConfig::from_json_file(const std::string &path)
+bool ProductXPathConfig::from_json_file(const std::string& path)
 {
-    fs::path json_path = fs::current_path().parent_path() / path;
-    if (!fs::exists(json_path))
-    {
-        throw std::runtime_error("File does not exist" + json_path.string());
-    }
+    std::ifstream file(path);
+    if (!file)
+        throw std::runtime_error("Cannot open file: " + path);
 
-    std::ifstream file(json_path);
-    if (!file.is_open())
-        throw std::runtime_error("Cannot open file: " + json_path.string());
+    nlohmann::json j;
+    file >> j;
 
-    std::stringstream buffer;
-    buffer << file.rdbuf();
+    product_item = j.value("product_item", "");
+    url          = j.value("url", "");
+    image        = j.value("image", "");
+    name         = j.value("name", "");
+    price        = j.value("price", "");
+    first_page   = j.value("first_page", "");
+    page_numbers = j.value("page_numbers", "");
 
-    std::string content = buffer.str();
-    if (content.empty())
-        throw std::runtime_error("File is empty: " + json_path.string());
-
-    return from_json_string(content);
+    return !product_item.empty() && !first_page.empty();
 }
