@@ -30,6 +30,11 @@ You need these libs installed:
 
 ## How to use
 1.Build the project (CMake)
+
+First of all you need to create build directory
+   ```c
+  mkdir build && cd build
+  ```
   The project has two types of building
 
   You can build in Debug or Release mode:
