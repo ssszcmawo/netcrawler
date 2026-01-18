@@ -1,3 +1,4 @@
+#pragma once
 #include "ProductRepository.hpp"
 #include "csv.h"
 #include <optional>
