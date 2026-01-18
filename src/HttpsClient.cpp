@@ -53,7 +53,7 @@ size_t HttpsClient::write_callback(void *contents, std::size_t size, std::size_t
     return total;
 }
 
-std::string HttpsClient::get_request(std::string &url)
+std::string HttpsClient::get_request(const std::string &url)
 {
     if (!curl)
     {
