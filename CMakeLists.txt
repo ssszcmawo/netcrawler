@@ -26,6 +26,7 @@ add_executable(WebCrawler
     src/Utils.cpp
     src/CSV.cpp
     src/ProductXPathConfig.cpp
+    src/Crawler.cpp
 )
 
 target_include_directories(WebCrawler PRIVATE
