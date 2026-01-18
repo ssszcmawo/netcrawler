@@ -3,12 +3,13 @@
 #include "HttpsClient.hpp"
 #include "ProductXPathConfig.hpp"
 #include "Utils.hpp"
+#include "Crawler.hpp"
 #include "slogger.h"
 #include <curl/curl.h>
 #include <fstream>
 #include <iostream>
 
-int main()
+int main(int argc,char **argv)
 {
     curl_global_init(CURL_GLOBAL_ALL);
 #ifdef DEBUG_BUILD
@@ -19,48 +20,36 @@ int main()
     set_log_level(INFO);
 #endif
 
-    HttpsClient client;
 
-    std::string url = "https://www.scrapingcourse.com/ecommerce/";
-    std::string document = client.get_request(url);
-
-    std::string filename = "page.html";
-    std::ofstream out(filename);
-    if (out.is_open())
+    if (argc < 2)
     {
-        out << document;
-        out.close();
-        std::cout << "page.html saved\n";
-    }
-    else
-    {
-        std::cerr << "Could not open page.html\n";
+        LOG_ERROR("Usage: ./WebCrawler <path_to_config.json>");
+        return 1;
     }
 
-    HtmlParser parser;
 
-    try
+    ProductXPathConfig config;
+
+    try{
+      if(!config.from_json_file(argv[1]))
+      {
+        LOG_ERROR("Could not load json");
+        return 1;
+      }
+    }catch(const std::exception& e)
     {
-        auto config = ProductXPathConfig::from_json_file("products_xpath.json");
-
-        parser.parse(document, config);
-    }
-    catch (const std::exception &e)
-    {
-        LOG_ERROR("Failed to load XPath config: %s", e.what());
+      LOG_ERROR("Failed to load config: %s", e.what());
+      return 1;
     }
 
-    auto &repo = ProductRepository::instance();
+    Crawler crawler(config); 
 
-    auto filtered = Utils::filter_products_by_price(repo.get_all(), 40.0, 50.0);
+    crawler.run();
 
-    CSV::export_to_csv("filtered_products.csv", filtered);
-
-    auto prod = Utils::find_product_by_name(repo.get_all(), "Ana Running Short");
-    if (prod)
-        std::cout << prod->name << " " << prod->price << "\n";
-    else
-        std::cout << "Product not found\n";
+    CSV::export_to_csv(
+        "products.csv",
+        ProductRepository::instance().get_all()
+    );
 
     curl_global_cleanup();
     return 0;
