@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <curl/curl.h>
 
@@ -7,7 +8,7 @@ public:
     HttpsClient();
    ~HttpsClient();
 
-    std::string get_request(std::string& url);
+    std::string get_request(const std::string& url);
 
 private: 
     static size_t write_callback(void* contents,std::size_t size,std::size_t nmemb,void* userp);
