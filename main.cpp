@@ -16,7 +16,7 @@ int main(int argc,char **argv)
     init_consoleLog(stdout);
     set_log_level(INFO);
 #else
-    init_fileLog("log_file", 1024 * 1024, true);
+    init_fileLog("log_file", 1024 * 1024);
     set_log_level(INFO);
 #endif
 
