@@ -13,9 +13,11 @@ int main(int argc,char **argv)
 {
     curl_global_init(CURL_GLOBAL_ALL);
 #ifdef DEBUG_BUILD
+    start_logging_thread();
     init_consoleLog(stdout);
     set_log_level(INFO);
 #else
+    start_logging_thread();
     init_fileLog("log_file", 1024 * 1024);
     set_log_level(INFO);
 #endif
