@@ -7,11 +7,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 file(GLOB SLOGGER_SRC
     ${PROJECT_SOURCE_DIR}/thirdparty/slogger/src/*.c
+    ${PROJECT_SOURCE_DIR}/thirdparty/slogger/common/*.c
 )
 
 add_library(slogger STATIC ${SLOGGER_SRC})
+
 target_include_directories(slogger PUBLIC
     ${PROJECT_SOURCE_DIR}/thirdparty/slogger/src
+    ${PROJECT_SOURCE_DIR}/thirdparty/slogger/common
 )
 
 add_subdirectory(thirdparty/json)
@@ -33,6 +36,7 @@ target_include_directories(WebCrawler PRIVATE
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/thirdparty/fast-cpp-csv-parser
     ${PROJECT_SOURCE_DIR}/thirdparty/slogger/src
+    ${PROJECT_SOURCE_DIR}/thirdparty/slogger/common
     ${CURL_INCLUDE_DIRS}
     ${LIBXML2_INCLUDE_DIRS}
 )
@@ -56,3 +60,4 @@ target_compile_definitions(WebCrawler PRIVATE
     $<$<CONFIG:Debug>:DEBUG_BUILD>
     $<$<CONFIG:Release>:RELEASE_BUILD>
 )
+
